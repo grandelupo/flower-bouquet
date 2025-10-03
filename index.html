@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flower Bouquet Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌸 For the Cutest Girl</h1>
+            <p id="nameDisplay">A personalized bouquet just for you</p>
+        </header>
+        
+        <div class="input-section">
+            <input type="text" id="nameInput" placeholder="Enter your name..." maxlength="50">
+            <button id="generateBtn">Generate Bouquet</button>
+        </div>
+        
+        <div class="bouquet-container" id="bouquetContainer">
+            <div class="flowers" id="flowers"></div>
+        </div>
+        
+        <div class="info-section" id="infoSection" style="display: none;">
+            <p id="bouquetInfo"></p>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

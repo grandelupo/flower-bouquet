@@ -1,0 +1,330 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: 
+        radial-gradient(ellipse at 20% 80%, rgba(120, 180, 120, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(100, 160, 100, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 40% 40%, rgba(140, 200, 140, 0.2) 0%, transparent 50%),
+        linear-gradient(135deg, #e8f5e8 0%, #d4edda 25%, #c3e6c3 50%, #b8dfb8 75%, #a8d8a8 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: none;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 100px 100px, 80px 80px, 120px 120px;
+    background-position: 0 0, 40px 40px, 60px 60px;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+header {
+    margin-bottom: 40px;
+    color: white;
+}
+
+header h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.input-section {
+    margin-bottom: 40px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#nameInput {
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 25px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    min-width: 250px;
+}
+
+#nameInput:focus {
+    outline: none;
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+
+#generateBtn {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(255,107,107,0.3);
+}
+
+#generateBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(255,107,107,0.4);
+}
+
+#generateBtn:active {
+    transform: translateY(0);
+}
+
+.bouquet-container {
+    position: relative;
+    height: 500px;
+    margin: 40px auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    perspective: 1000px;
+}
+
+.vase {
+    position: absolute;
+    bottom: 0;
+    z-index: 1;
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+}
+
+.vase-body {
+    width: 90px;
+    height: 140px;
+    background: linear-gradient(135deg, #e8f4fd, #b3d9ff, #80c5ff);
+    border-radius: 45px 45px 25px 25px;
+    position: relative;
+    box-shadow: inset 0 4px 8px rgba(255,255,255,0.6),
+                inset 0 -4px 8px rgba(0,0,0,0.1),
+                0 8px 32px rgba(0,0,0,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.vase-body::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 110px;
+    background: linear-gradient(135deg, #f0f8ff, #d1ecf1, #bee5eb);
+    border-radius: 35px 35px 20px 20px;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.8),
+                inset 0 -2px 4px rgba(0,0,0,0.05);
+}
+
+.vase-body::after {
+    content: '';
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 90px;
+    background: linear-gradient(135deg, #ffffff, #f8fcff);
+    border-radius: 25px 25px 15px 15px;
+    opacity: 0.6;
+}
+
+.vase-base {
+    width: 120px;
+    height: 25px;
+    background: linear-gradient(135deg, #2c5282, #2a4d7a, #1a365d);
+    border-radius: 50%;
+    margin: 0 auto;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4),
+                inset 0 2px 4px rgba(255,255,255,0.1);
+    border: 1px solid rgba(0,0,0,0.2);
+}
+
+.flowers {
+    position: absolute;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    height: 400px;
+    width: 350px;
+}
+
+.flower {
+    position: absolute;
+    animation: sway 4s ease-in-out infinite;
+    cursor: default;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.flower-petal {
+    position: absolute;
+    transform-origin: 50%;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: linear-gradient(135deg, var(--petal-light), var(--petal-dark));
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 
+                inset 0 -2px 4px rgba(0,0,0,0.1);
+    z-index: 5;
+}
+
+.flower-petal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+    border-radius: inherit;
+}
+
+.flower-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--center-light), var(--center-dark));
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.4),
+                inset 0 -2px 4px rgba(0,0,0,0.2),
+                0 2px 8px rgba(0,0,0,0.2);
+}
+
+.flower-stem {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+    background: linear-gradient(to bottom, #2d5016, #4a7c59, #6b8e23);
+    box-shadow: 2px 0 4px rgba(0,0,0,0.3);
+    z-index: -1;
+}
+
+.flower-leaf {
+    position: absolute;
+    border-radius: 0 100% 0 100%;
+    background: linear-gradient(45deg, #2d5016, #4a7c59, #6b8e23);
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    transform-origin: bottom left;
+    z-index: 0;
+}
+
+.flower-leaf::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+    border-radius: inherit;
+}
+
+@keyframes sway {
+    0%, 100% { transform: rotate(-1deg) scale(1); }
+    25% { transform: rotate(1.5deg) scale(1.02); }
+    50% { transform: rotate(2deg) scale(1.05); }
+    75% { transform: rotate(0.5deg) scale(1.02); }
+}
+
+.info-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+#bouquetInfo {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* Custom cursor */
+.custom-cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: difference;
+    transition: transform 0.1s ease;
+}
+
+/* Flower colors */
+.rose { color: #ff69b4; }
+.tulip { color: #ff4500; }
+.daisy { color: #ffffff; }
+.sunflower { color: #ffd700; }
+.lily { color: #ffffff; }
+.orchid { color: #da70d6; }
+.peony { color: #ff1493; }
+.iris { color: #9932cc; }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .input-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    #nameInput {
+        min-width: 200px;
+    }
+    
+    .bouquet-container {
+        height: 400px;
+    }
+    
+    .flowers {
+        height: 280px;
+        width: 250px;
+    }
+}
