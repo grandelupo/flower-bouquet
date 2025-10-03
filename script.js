@@ -7,14 +7,28 @@ class FlowerBouquetGenerator {
         this.spacingMultiplierX = 3; // Horizontal spacing (higher = more spread out)
         this.spacingMultiplierY = 1; // Vertical spacing (higher = more spread out)
         
+        // Canvas setup
+        this.canvas = null;
+        this.ctx = null;
+        this.flowers = [];
+        this.animationId = null;
+        
+        // Interaction setup
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.touchX = 0;
+        this.touchY = 0;
+        this.isInteracting = false;
+        
         this.flowerTypes = [
             { 
                 name: 'Rose', 
                 colors: [
-                    { light: '#ffb3d9', dark: '#ff69b4', center: '#8b2252' },
-                    { light: '#ffc0cb', dark: '#ff1493', center: '#8b0000' },
-                    { light: '#ffb6c1', dark: '#dc143c', center: '#8b0000' },
-                    { light: '#ffcccb', dark: '#ff6347', center: '#8b0000' }
+                    { light: '#ffc0e8', dark: '#e91e63', center: '#ad1457' },
+                    { light: '#ffb3e6', dark: '#c2185b', center: '#880e4f' },
+                    { light: '#ffcccb', dark: '#f44336', center: '#d32f2f' },
+                    { light: '#ffe0b3', dark: '#ff9800', center: '#f57c00' },
+                    { light: '#f8bbd9', dark: '#e91e63', center: '#ad1457' }
                 ],
                 petalCount: [15, 20],
                 petalShape: 'rose'
@@ -33,9 +47,10 @@ class FlowerBouquetGenerator {
             { 
                 name: 'Daisy', 
                 colors: [
-                    { light: '#ffffff', dark: '#f8f8ff', center: '#ffd700' },
-                    { light: '#f0f8ff', dark: '#e6e6fa', center: '#ffa500' },
-                    { light: '#fff8dc', dark: '#f5deb3', center: '#ffd700' }
+                    { light: '#ffffff', dark: '#f5f5f5', center: '#ffeb3b' },
+                    { light: '#fff9c4', dark: '#fff176', center: '#ffc107' },
+                    { light: '#f3e5f5', dark: '#e1bee7', center: '#ba68c8' },
+                    { light: '#e8f5e8', dark: '#c8e6c9', center: '#4caf50' }
                 ],
                 petalCount: [12, 15, 18],
                 petalShape: 'daisy'
@@ -203,8 +218,69 @@ class FlowerBouquetGenerator {
     }
     
     init() {
+        this.setupCanvas();
         this.setupEventListeners();
         this.handleURLParameters();
+        this.startAnimation();
+    }
+    
+    setupCanvas() {
+        this.canvas = document.getElementById('flowerCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.ctx.imageSmoothingEnabled = true;
+        this.ctx.imageSmoothingQuality = 'high';
+        
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+        
+        // Mouse interaction
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouseX = e.clientX - rect.left;
+            this.mouseY = e.clientY - rect.top;
+            this.isInteracting = true;
+        });
+        
+        this.canvas.addEventListener('mouseleave', () => {
+            this.isInteracting = false;
+        });
+        
+        // Touch interaction
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = this.canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            this.touchX = touch.clientX - rect.left;
+            this.touchY = touch.clientY - rect.top;
+            this.isInteracting = true;
+        });
+        
+        this.canvas.addEventListener('touchend', () => {
+            this.isInteracting = false;
+        });
+    }
+    
+    resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+    
+    startAnimation() {
+        const animate = () => {
+            this.render();
+            this.animationId = requestAnimationFrame(animate);
+        };
+        animate();
+    }
+    
+    render() {
+        // Clear canvas
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw all flowers
+        this.flowers.forEach(flower => {
+            this.drawFlower(flower);
+        });
     }
     
     
@@ -297,76 +373,96 @@ class FlowerBouquetGenerator {
     }
     
     clearBouquet() {
-        const flowersContainer = document.getElementById('flowers');
-        flowersContainer.innerHTML = '';
+        this.flowers = [];
     }
     
     createBouquet(seed, name) {
-        const flowersContainer = document.getElementById('flowers');
-        const baseFlowerCount = 12 + Math.floor(this.seededRandom(seed) * 16); // 12-27 flowers
+        // Calculate base flower count based on screen size
+        const screenArea = this.canvas.width * this.canvas.height;
+        const baseArea = 1920 * 1080; // Reference screen size (Full HD)
+        const areaMultiplier = Math.sqrt(screenArea / baseArea); // Square root for more reasonable scaling
+        
+        const baseFlowerCount = Math.floor((12 + this.seededRandom(seed) * 16) * areaMultiplier);
         const flowerCount = Math.floor(baseFlowerCount * this.bouquetSizeMultiplier);
         
         let currentSeed = seed;
         const flowerPositions = [];
         
-        // Create a more natural bouquet arrangement
-        const centerX = 150; // Keep center fixed
-        const centerY = 150; // Keep center fixed
-        const baseRadius = 60 * Math.sqrt(this.bouquetSizeMultiplier); // Scale radius more moderately
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        const minDistance = 40 / Math.sqrt(this.bouquetSizeMultiplier); // Adjust for bouquet size
         
-        // Add some flowers in the center (taller flowers)
-        const centerFlowers = Math.floor(flowerCount * 0.3);
-        for (let i = 0; i < centerFlowers; i++) {
-            currentSeed++;
-            const angle = (i / centerFlowers) * Math.PI * 2;
-            const radius = this.seededRandom(currentSeed) * 30 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierX;
-            const x = centerX + Math.cos(angle) * radius;
-            const y = centerY - 20 - this.seededRandom(currentSeed + 1) * 40 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierY; // Higher up
-            
-            if (!this.isPositionOverlapping(x, y, flowerPositions)) {
-                flowerPositions.push({ x, y });
-                const flower = this.createFlower(currentSeed, x, y);
-                // Set z-index based on Y position - flowers higher in bouquet (lower Y) appear in front
-                flower.style.zIndex = Math.floor(y);
-                flowersContainer.appendChild(flower);
-            }
-        }
-        
-        // Add flowers in a natural bouquet shape (heart-like)
-        const remainingFlowers = flowerCount - centerFlowers;
-        for (let i = 0; i < remainingFlowers; i++) {
+        // Create chaotic meadow with multiple clusters and random scatter
+        for (let i = 0; i < flowerCount; i++) {
             currentSeed++;
             let x, y, attempts = 0;
             
             do {
-                // Create a more natural bouquet shape
-                const bouquetShape = this.seededRandom(currentSeed);
-                if (bouquetShape < 0.4) {
-                    // Left side
-                    x = centerX - 40 - this.seededRandom(currentSeed + 1) * 60 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierX;
-                    y = centerY + this.seededRandom(currentSeed + 2) * 80 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierY - 40;
-                } else if (bouquetShape < 0.8) {
-                    // Right side
-                    x = centerX + 40 + this.seededRandom(currentSeed + 1) * 60 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierX;
-                    y = centerY + this.seededRandom(currentSeed + 2) * 80 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierY - 40;
+                const pattern = this.seededRandom(currentSeed);
+                
+                if (pattern < 0.25) {
+                    // Cluster around center
+                    const angle = this.seededRandom(currentSeed + 1) * Math.PI * 2;
+                    const radius = this.seededRandom(currentSeed + 2) * 120 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierX;
+                    x = centerX + Math.cos(angle) * radius;
+                    y = centerY + Math.sin(angle) * radius * 0.6; // Slightly flattened
+                } else if (pattern < 0.45) {
+                    // Random clusters scattered around
+                    const clusterX = this.seededRandom(currentSeed + 1) * this.canvas.width;
+                    const clusterY = this.seededRandom(currentSeed + 2) * this.canvas.height;
+                    const clusterRadius = 60 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierX;
+                    
+                    const angle = this.seededRandom(currentSeed + 3) * Math.PI * 2;
+                    const radius = this.seededRandom(currentSeed + 4) * clusterRadius;
+                    x = clusterX + Math.cos(angle) * radius;
+                    y = clusterY + Math.sin(angle) * radius;
+                } else if (pattern < 0.7) {
+                    // Chaotic random scatter across screen
+                    x = this.seededRandom(currentSeed + 1) * this.canvas.width;
+                    y = this.seededRandom(currentSeed + 2) * this.canvas.height;
                 } else {
-                    // Fill gaps
-                    x = centerX + (this.seededRandom(currentSeed + 1) - 0.5) * 120 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierX;
-                    y = centerY + this.seededRandom(currentSeed + 2) * 100 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierY - 30;
+                    // Organic flow patterns (like wind-blown seeds)
+                    const flowPattern = this.seededRandom(currentSeed + 1);
+                    if (flowPattern < 0.33) {
+                        // Curved flow from top-left to bottom-right
+                        const t = this.seededRandom(currentSeed + 2);
+                        x = t * this.canvas.width + Math.sin(t * Math.PI * 3) * 100 * this.spacingMultiplierX;
+                        y = t * this.canvas.height + Math.cos(t * Math.PI * 2) * 80 * this.spacingMultiplierY;
+                    } else if (flowPattern < 0.66) {
+                        // Curved flow from top-right to bottom-left
+                        const t = this.seededRandom(currentSeed + 2);
+                        x = this.canvas.width - t * this.canvas.width + Math.sin(t * Math.PI * 2) * 120 * this.spacingMultiplierX;
+                        y = t * this.canvas.height + Math.cos(t * Math.PI * 3) * 90 * this.spacingMultiplierY;
+                    } else {
+                        // Spiral pattern
+                        const t = this.seededRandom(currentSeed + 2) * Math.PI * 4;
+                        const spiralRadius = t * 30 * Math.sqrt(this.bouquetSizeMultiplier) * this.spacingMultiplierX;
+                        x = centerX + Math.cos(t) * spiralRadius;
+                        y = centerY + Math.sin(t) * spiralRadius * 0.8;
+                    }
                 }
                 
+                // Add micro-randomness to break any remaining patterns
+                x += (this.seededRandom(currentSeed + 5) - 0.5) * 40;
+                y += (this.seededRandom(currentSeed + 6) - 0.5) * 40;
+                
+                // Keep within bounds
+                x = Math.max(50, Math.min(this.canvas.width - 50, x));
+                y = Math.max(100, Math.min(this.canvas.height - 50, y));
+                
                 attempts++;
-                currentSeed += 3;
-            } while (this.isPositionOverlapping(x, y, flowerPositions) && attempts < 50 * this.bouquetSizeMultiplier);
+                currentSeed += 7;
+            } while (this.isPositionOverlapping(x, y, flowerPositions) && attempts < 30 * this.bouquetSizeMultiplier);
             
-            if (attempts < 50 * this.bouquetSizeMultiplier) {
+            if (attempts < 30 * this.bouquetSizeMultiplier) {
                 flowerPositions.push({ x, y });
-                const flower = this.createFlower(currentSeed, x, y);
-                // Set z-index based on Y position - flowers higher in bouquet (lower Y) appear in front
-                flower.style.zIndex = Math.floor(y);
-                flowersContainer.appendChild(flower);
+                const flower = this.createFlowerData(currentSeed, x, y);
+                this.flowers.push(flower);
             }
         }
+        
+        // Sort flowers by Y position for proper layering
+        this.flowers.sort((a, b) => a.y - b.y);
         
         this.displayBouquetInfo(name, flowerCount, seed);
     }
@@ -381,79 +477,160 @@ class FlowerBouquetGenerator {
         });
     }
     
-    createFlower(seed, x, y) {
+    createFlowerData(seed, x, y) {
         const flowerType = this.flowerTypes[Math.floor(this.seededRandom(seed) * this.flowerTypes.length)];
         const colorScheme = flowerType.colors[Math.floor(this.seededRandom(seed + 1) * flowerType.colors.length)];
         const petalCountOptions = flowerType.petalCount;
         const petalCount = petalCountOptions[Math.floor(this.seededRandom(seed + 2) * petalCountOptions.length)];
-        const stemHeight = 100 + this.seededRandom(seed + 3) * 40; // 50-90px
-        const size = 0.9 + this.seededRandom(seed + 4) * 0.8; // 0.9-1.7 scale
+        const stemHeight = 100 + this.seededRandom(seed + 3) * 40;
+        const size = 0.9 + this.seededRandom(seed + 4) * 0.8;
         
-        const flower = document.createElement('div');
-        flower.className = 'flower';
-        flower.style.left = x + 'px';
-        flower.style.top = y + 'px';
-        flower.style.transform = `translate(-50%, -50%) scale(${size})`;
-        
-        // Set CSS custom properties for colors
-        flower.style.setProperty('--petal-light', colorScheme.light);
-        flower.style.setProperty('--petal-dark', colorScheme.dark);
-        flower.style.setProperty('--center-light', colorScheme.center);
-        flower.style.setProperty('--center-dark', this.darkenColor(colorScheme.center, 0.3));
-        
-        // Create stem first (will be behind petals due to CSS z-index)
-        const stem = document.createElement('div');
-        stem.className = 'flower-stem';
-        stem.style.height = stemHeight + 'px';
-        stem.style.width = (2 + this.seededRandom(seed + 5) * 2) + 'px';
-        flower.appendChild(stem);
-        
-        // Create one leaf
-        const leaf = document.createElement('div');
-        leaf.className = 'flower-leaf';
-        leaf.style.top = '20px';
-        leaf.style.left = '-15px';
-        leaf.style.width = (12 + this.seededRandom(seed + 6) * 8) + 'px';
-        leaf.style.height = (20 + this.seededRandom(seed + 7) * 15) + 'px';
-        leaf.style.transform = `translateY(${this.seededRandom(seed + 8) * 10 - 5}px)`;
-        flower.appendChild(leaf);
-        
-        // Create petals third (will be in front due to CSS z-index)
-        this.createPetals(flower, flowerType.petalShape, petalCount, seed);
-        
-        // Create center last (highest z-index)
-        const center = document.createElement('div');
-        center.className = 'flower-center';
-        const centerSize = this.getCenterSize(flowerType.name, petalCount);
-        center.style.width = centerSize + 'px';
-        center.style.height = centerSize + 'px';
-        flower.appendChild(center);
-        
-        // Add hover animation delay
-        const delay = this.seededRandom(seed + 11) * 3;
-        flower.style.animationDelay = delay + 's';
-        
-        return flower;
+        return {
+            x: x,
+            y: y,
+            type: flowerType.name,
+            petalShape: flowerType.petalShape,
+            petalCount: petalCount,
+            colorScheme: colorScheme,
+            stemHeight: stemHeight,
+            size: size,
+            leafWidth: 12 + this.seededRandom(seed + 6) * 8,
+            leafHeight: 20 + this.seededRandom(seed + 7) * 15,
+            leafOffset: this.seededRandom(seed + 8) * 10 - 5,
+            swayPhase: this.seededRandom(seed + 11) * Math.PI * 2,
+            swaySpeed: 0.5 + this.seededRandom(seed + 12) * 1.5,
+            interactionScale: 1
+        };
     }
     
-    createPetals(flower, petalShape, petalCount, seed) {
-        for (let i = 0; i < petalCount; i++) {
-            const petal = document.createElement('div');
-            petal.className = 'flower-petal';
+    drawFlower(flower) {
+        const time = Date.now() * 0.001;
+        let sway = Math.sin(time * flower.swaySpeed + flower.swayPhase) * 0.1;
+        
+        // Add interaction effects
+        if (this.isInteracting) {
+            const interactX = this.mouseX || this.touchX;
+            const interactY = this.mouseY || this.touchY;
             
-            const angle = i * (360 / petalCount);
-            const petalSize = this.getPetalSize(petalShape, seed + i);
+            const dx = interactX - flower.x;
+            const dy = interactY - flower.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
             
-            petal.style.width = petalSize.width + 'px';
-            petal.style.height = petalSize.height + 'px';
-            petal.style.left = '50%';
-            petal.style.top = '50%';
-            petal.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-            petal.style.borderRadius = this.getPetalBorderRadius(petalShape);
+            if (distance < 150) {
+                const intensity = (150 - distance) / 150;
+                const angle = Math.atan2(dy, dx);
+                sway += Math.sin(angle) * intensity * 0.3;
+                
+                // Add scale effect
+                flower.interactionScale = 1 + intensity * 0.2;
+            } else {
+                flower.interactionScale = 1;
+            }
+        } else {
+            flower.interactionScale = 1;
+        }
+        
+        this.ctx.save();
+        // Translate to the bottom of the stem (where the rotation should happen)
+        this.ctx.translate(flower.x, flower.y + flower.stemHeight * flower.size);
+        this.ctx.rotate(sway);
+        this.ctx.scale(flower.size * flower.interactionScale, flower.size * flower.interactionScale);
+        // Translate back up to draw the flower at the correct position
+        this.ctx.translate(0, -flower.stemHeight);
+        
+        // Draw stem
+        this.drawStem(flower);
+        
+        // Draw leaf
+        this.drawLeaf(flower);
+        
+        // Draw petals
+        this.drawPetals(flower);
+        
+        // Draw center
+        this.drawCenter(flower);
+        
+        this.ctx.restore();
+    }
+    
+    drawStem(flower) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 0);
+        this.ctx.lineTo(0, flower.stemHeight);
+        this.ctx.strokeStyle = '#2d5016';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+    }
+    
+    drawLeaf(flower) {
+        this.ctx.save();
+        this.ctx.translate(-15, 20 + flower.leafOffset);
+        this.ctx.fillStyle = '#4a7c59';
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 0, flower.leafWidth / 2, flower.leafHeight / 2, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+    }
+    
+    drawPetals(flower) {
+        for (let i = 0; i < flower.petalCount; i++) {
+            const angle = (i / flower.petalCount) * Math.PI * 2;
+            this.ctx.save();
+            this.ctx.rotate(angle);
             
-            flower.appendChild(petal);
+            // Create gradient for petal
+            const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+            gradient.addColorStop(0, flower.colorScheme.light);
+            gradient.addColorStop(1, flower.colorScheme.dark);
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            
+            // Draw petal shape based on flower type
+            this.drawPetalShape(flower.petalShape);
+            
+            this.ctx.fill();
+            this.ctx.restore();
         }
     }
+    
+    drawPetalShape(shape) {
+        const petalSize = this.getPetalSize(shape, 0);
+        
+        switch(shape) {
+            case 'rose':
+                this.ctx.ellipse(0, -15, petalSize.width / 2, petalSize.height / 2, 0, 0, Math.PI * 2);
+                break;
+            case 'tulip':
+                this.ctx.ellipse(0, -20, petalSize.width / 2, petalSize.height / 2, 0, 0, Math.PI * 2);
+                break;
+            case 'daisy':
+                this.ctx.ellipse(0, -12, petalSize.width / 2, petalSize.height / 2, 0, 0, Math.PI * 2);
+                break;
+            case 'sunflower':
+                this.ctx.ellipse(0, -15, petalSize.width / 2, petalSize.height / 2, 0, 0, Math.PI * 2);
+                break;
+            case 'lily':
+                this.ctx.ellipse(0, -25, petalSize.width / 2, petalSize.height / 2, 0, 0, Math.PI * 2);
+                break;
+            default:
+                this.ctx.ellipse(0, -15, petalSize.width / 2, petalSize.height / 2, 0, 0, Math.PI * 2);
+        }
+    }
+    
+    drawCenter(flower) {
+        const centerSize = this.getCenterSize(flower.type, flower.petalCount);
+        
+        const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, centerSize / 2);
+        gradient.addColorStop(0, flower.colorScheme.center);
+        gradient.addColorStop(1, this.darkenColor(flower.colorScheme.center, 0.3));
+        
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, centerSize / 2, 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+    
     
     getPetalSize(petalShape, seed) {
         const baseSizes = {
