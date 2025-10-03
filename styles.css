@@ -73,6 +73,8 @@ header p {
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
+    z-index: 9999;
+    position: relative;
 }
 
 #nameInput {
@@ -96,7 +98,7 @@ header p {
 #generateBtn {
     padding: 15px 30px;
     font-size: 1.1rem;
-    background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+    background: linear-gradient(45deg, #ff6bd8, #ff8eb9);
     color: white;
     border: none;
     border-radius: 25px;
@@ -111,6 +113,28 @@ header p {
 }
 
 #generateBtn:active {
+    transform: translateY(0);
+}
+
+#copyLinkBtn {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+    margin-left: 10px;
+}
+
+#copyLinkBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(76, 175, 80, 0.4);
+}
+
+#copyLinkBtn:active {
     transform: translateY(0);
 }
 
@@ -277,7 +301,7 @@ header p {
     position: absolute;
     margin-top: 30px;
     padding: 20px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(104, 46, 94, 0.3);
     backdrop-filter: blur(10px);
     border-radius: 20px;
     color: white;

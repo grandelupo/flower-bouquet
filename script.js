@@ -287,16 +287,26 @@ class FlowerBouquetGenerator {
     setupEventListeners() {
         const generateBtn = document.getElementById('generateBtn');
         const nameInput = document.getElementById('nameInput');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
         
-        generateBtn.addEventListener('click', () => this.generateBouquet());
+        generateBtn.addEventListener('click', () => {
+            this.generateBouquet();
+            this.showCopyLinkButton();
+        });
+        
         nameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.generateBouquet();
+                this.showCopyLinkButton();
             }
         });
         
         nameInput.addEventListener('input', (e) => {
             this.updateURL(e.target.value);
+        });
+        
+        copyLinkBtn.addEventListener('click', () => {
+            this.copyLinkToClipboard();
         });
     }
     
@@ -322,6 +332,84 @@ class FlowerBouquetGenerator {
         }
     }
     
+    showCopyLinkButton() {
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        copyLinkBtn.style.display = 'inline-block';
+    }
+    
+    copyLinkToClipboard() {
+        const nameInput = document.getElementById('nameInput');
+        const name = nameInput.value.trim();
+        
+        if (name) {
+            const currentURL = new URL(window.location.href);
+            currentURL.searchParams.set('name', name);
+            const linkToCopy = currentURL.toString();
+            
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(linkToCopy).then(() => {
+                    this.showCopySuccess();
+                }).catch(err => {
+                    console.error('Clipboard API failed: ', err);
+                    this.fallbackCopyToClipboard(linkToCopy);
+                });
+            } else {
+                // Fallback for older browsers or non-HTTPS contexts
+                this.fallbackCopyToClipboard(linkToCopy);
+            }
+        }
+    }
+    
+    fallbackCopyToClipboard(text) {
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            if (successful) {
+                this.showCopySuccess();
+            } else {
+                this.showCopyError();
+            }
+        } catch (err) {
+            console.error('Fallback copy failed: ', err);
+            this.showCopyError();
+        }
+    }
+    
+    showCopySuccess() {
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const originalText = copyLinkBtn.textContent;
+        copyLinkBtn.textContent = 'Copied!';
+        copyLinkBtn.style.background = 'linear-gradient(45deg, #4CAF50, #2E7D32)';
+        
+        setTimeout(() => {
+            copyLinkBtn.textContent = originalText;
+            copyLinkBtn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+        }, 2000);
+    }
+    
+    showCopyError() {
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const originalText = copyLinkBtn.textContent;
+        copyLinkBtn.textContent = 'Failed';
+        copyLinkBtn.style.background = 'linear-gradient(45deg, #f44336, #d32f2f)';
+        
+        setTimeout(() => {
+            copyLinkBtn.textContent = originalText;
+            copyLinkBtn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+        }, 2000);
+    }
+    
     updateURL(name) {
         const url = new URL(window.location);
         if (name && name.trim()) {
@@ -334,10 +422,12 @@ class FlowerBouquetGenerator {
     
     updateNameDisplay(name) {
         const nameDisplay = document.getElementById('nameDisplay');
-        if (name && name.trim()) {
-            nameDisplay.textContent = ` ${name} 🌸 A personalized bouquet just for you.`;
-        } else {
-            nameDisplay.textContent = 'A personalized bouquet just for you';
+        if (nameDisplay) {
+            if (name && name.trim()) {
+                nameDisplay.textContent = ` ${name} 🌸 A personalized bouquet just for you.`;
+            } else {
+                nameDisplay.textContent = 'A personalized bouquet just for you';
+            }
         }
     }
     
@@ -564,11 +654,71 @@ class FlowerBouquetGenerator {
     
     drawLeaf(flower) {
         this.ctx.save();
-        this.ctx.translate(-15, 20 + flower.leafOffset);
-        this.ctx.fillStyle = '#4a7c59';
+        this.ctx.translate(-15, 40 + flower.leafOffset);
+        
+        // Add slight skew to make leaf look like it's growing from the stem
+        this.ctx.transform(1, 0, 0.8, 1, 0, 0);
+        
+        // Draw leaf using path for more realistic shape
         this.ctx.beginPath();
-        this.ctx.ellipse(0, 0, flower.leafWidth / 2, flower.leafHeight / 2, 0, 0, Math.PI * 2);
+        
+        // Start from the tip of the leaf
+        this.ctx.moveTo(0, -flower.leafHeight / 2);
+        
+        // Create curved leaf edge (top side)
+        this.ctx.quadraticCurveTo(
+            flower.leafWidth * 0.7, -flower.leafHeight * 0.25, 
+            flower.leafWidth * 0.8, 0
+        );
+        
+        // Create the wider part of the leaf (bottom side)
+        this.ctx.quadraticCurveTo(
+            flower.leafWidth * 0.6, flower.leafHeight * 0.15,
+            flower.leafWidth * 0.3, flower.leafHeight * 0.35
+        );
+        
+        // Create the stem connection (narrower base)
+        this.ctx.quadraticCurveTo(
+            flower.leafWidth * 0.1, flower.leafHeight * 0.45,
+            0, flower.leafHeight / 2
+        );
+        
+        // Mirror the other side of the leaf
+        this.ctx.quadraticCurveTo(
+            -flower.leafWidth * 0.1, flower.leafHeight * 0.45,
+            -flower.leafWidth * 0.3, flower.leafHeight * 0.35
+        );
+        
+        this.ctx.quadraticCurveTo(
+            -flower.leafWidth * 0.6, flower.leafHeight * 0.15,
+            -flower.leafWidth * 0.8, 0
+        );
+        
+        this.ctx.quadraticCurveTo(
+            -flower.leafWidth * 0.7, -flower.leafHeight * 0.25,
+            0, -flower.leafHeight / 2
+        );
+        
+        this.ctx.closePath();
+        
+        // Fill and stroke the leaf
+        this.ctx.fillStyle = '#4a7c59';
         this.ctx.fill();
+        this.ctx.strokeStyle = '#2d5016';
+        this.ctx.lineWidth = 0.5;
+        this.ctx.stroke();
+        
+        // Add a subtle vein line down the center
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -flower.leafHeight * 0.4);
+        this.ctx.quadraticCurveTo(
+            0, 0,
+            0, flower.leafHeight * 0.4
+        );
+        this.ctx.strokeStyle = '#2d5016';
+        this.ctx.lineWidth = 0.3;
+        this.ctx.stroke();
+        
         this.ctx.restore();
     }
     
@@ -747,7 +897,7 @@ class FlowerBouquetGenerator {
         
         bouquetInfo.innerHTML = `
             <strong>For the cutest girl ${name} 🌸</strong><br>
-            A personalized bouquet just for you, with ${flowerCount} beautiful flowers generated from your name and today's date.<br>
+            A personalized bouquet just for you, with ${flowerCount} beautiful flowers planted from your name.<br>
         `;
         
         infoSection.style.display = 'block';
